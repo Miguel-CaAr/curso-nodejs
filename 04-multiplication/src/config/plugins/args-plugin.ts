@@ -20,4 +20,9 @@ export const yarg = yargs(hideBin(process.argv))
     default: false,
     describe: "Shpw multiplication table",
   })
+  .check((argv, options) => {
+    if (argv.b < 1) throw "Error: Base must be a greater than 0";
+
+    return true;
+  })
   .parseSync();
