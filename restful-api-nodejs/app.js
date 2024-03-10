@@ -27,12 +27,12 @@ const server = http.createServer((request, response) => {
       reqPOST(request, response, dbFile);
       break;
     case "PUT":
-      response.writeHead(200);
-      response.end("Excelente");
+      response.writeHead(501);
+      response.end("Not Implemented");
       break;
     case "DELETE":
-      response.writeHead(200);
-      response.end("Excelente");
+      response.writeHead(501);
+      response.end("Not Implemented");
       break;
     default:
       //Respuesta en caso de que el method no sea valido
