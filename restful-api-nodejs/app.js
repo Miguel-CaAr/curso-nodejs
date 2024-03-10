@@ -2,7 +2,8 @@
 const http = require("node:http");
 const fs = require("node:fs");
 //-----Funciones para manejar solicitudes-----//
-const reqGet = require('./methods/GET')
+const reqGet = require("./methods/GET");
+const reqPOST = require("./methods/POST");
 
 //-----Creacion de la carpeta y el JSON que sera la BD-----//
 const dbPath = "database";
@@ -20,11 +21,10 @@ const server = http.createServer((request, response) => {
   //-----Manejo de la solicitud dependiendo del metodo HTTP-----//
   switch (method) {
     case "GET":
-      reqGet(request, response, dbFile)
+      reqGet(request, response, dbFile);
       break;
     case "POST":
-      response.writeHead(200);
-      response.end("Excelente");
+      reqPOST(request, response, dbFile);
       break;
     case "PUT":
       response.writeHead(200);

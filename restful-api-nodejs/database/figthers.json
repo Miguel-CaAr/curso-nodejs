@@ -1,1 +1,9 @@
-[]
+[
+  { 
+    "name": "Connor McGregor", 
+    "description": "Peleador mas rico" },
+  {
+    "name": "Sean O'malley",
+    "description": "Le acaba de pegar una chinga a Chito Vera"
+  }
+]
