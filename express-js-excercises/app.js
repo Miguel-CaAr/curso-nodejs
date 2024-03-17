@@ -1,33 +1,52 @@
 const express = require("express");
 const crypto = require("node:crypto");
+const cors = require("cors");
 const movies = require("./movies.json");
 const { validateMovie, validatePartialMovie } = require("./schemas/movies");
 
 const app = express();
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      const ACCEPTED_ORIGINS = [
+        "http://localhost:8080",
+        "http://pagina-inventada.com",
+      ];
+
+      if (ACCEPTED_ORIGINS.includes(origin) || !origin) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Métodos permitidos
+  })
+); //Middleware para evitar el error de CORS y el PRE-Flight
 app.use(express.json()); //Ejecutar la funcion middleware express.json()
 app.disable("x-powered-by"); //Deshabilitar el header spam de express
 
-const ACCEPTED_ORIGINS = [
-  "http://localhost:8080",
-  "http://pagina-inventada.com",
-];
-//* Middleware manual para manejar peticiones CORS PRE-Flight
-app.options("/movies/:id", (req, res) => {
-  const origin = req.header("origin");
-  if (ACCEPTED_ORIGINS.includes(origin) || !origin) {
-    res.header("Access-Control-Allow-Origin", origin);
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-  }
-  res.sendStatus(200)
-});
+// const ACCEPTED_ORIGINS = [
+//   "http://localhost:8080",
+//   "http://pagina-inventada.com",
+// ];
+//* Middleware manual para manejar peticiones CORS PRE-Flight manualmente
+// app.options("/movies/:id", (req, res) => {
+//   const origin = req.header("origin");
+//   if (ACCEPTED_ORIGINS.includes(origin) || !origin) {
+//     res.header("Access-Control-Allow-Origin", origin);
+//     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+//   }
+//   res.sendStatus(200)
+// });
 
 //* -----Todos los recursos que sean MOVIES se identifican con /movies-----
 app.get("/movies", (req, res) => {
-  const origin = req.header("origin");
-  if (ACCEPTED_ORIGINS.includes(origin) || !origin) {
-    res.header("Access-Control-Allow-Origin", origin);
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-  }
+  //* Solucion a Cors manualmente
+  // const origin = req.header("origin");
+  // if (ACCEPTED_ORIGINS.includes(origin) || !origin) {
+  //   res.header("Access-Control-Allow-Origin", origin);
+  //   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+  // }
 
   const { genre } = req.query;
   if (genre) {
@@ -64,11 +83,12 @@ app.get("/movies/:id", (req, res) => {
 
 //* -----Eliminar una movie-----
 app.delete("/movies/:id", (req, res) => {
-  const origin = req.header("origin");
-  if (ACCEPTED_ORIGINS.includes(origin) || !origin) {
-    res.header("Access-Control-Allow-Origin", origin);
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-  }
+  //* Solucion a PRE-Flight manualmente
+  // const origin = req.header("origin");
+  // if (ACCEPTED_ORIGINS.includes(origin) || !origin) {
+  //   res.header("Access-Control-Allow-Origin", origin);
+  //   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+  // }
 
   const { id } = req.params;
   const movieIndex = movies.findIndex((movie) => movie.id === id);
@@ -77,7 +97,7 @@ app.delete("/movies/:id", (req, res) => {
     return res.status(404).json({ message: "Movie not found" });
   }
   movies.splice(movieIndex, 1);
-  res.sendStatus(200)
+  res.sendStatus(200);
 });
 
 //* Actualizar solo una pelicula
