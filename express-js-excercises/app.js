@@ -1,14 +1,34 @@
 const express = require("express");
 const crypto = require("node:crypto");
 const movies = require("./movies.json");
-const { validateMovie } = require("./schemas/movies");
+const { validateMovie, validatePartialMovie } = require("./schemas/movies");
 
 const app = express();
 app.use(express.json()); //Ejecutar la funcion middleware express.json()
 app.disable("x-powered-by"); //Deshabilitar el header spam de express
 
-//.Todos los recursos que sean MOVIES se identifican con /movies
+const ACCEPTED_ORIGINS = [
+  "http://localhost:8080",
+  "http://pagina-inventada.com",
+];
+//* Middleware manual para manejar peticiones CORS PRE-Flight
+app.options("/movies/:id", (req, res) => {
+  const origin = req.header("origin");
+  if (ACCEPTED_ORIGINS.includes(origin) || !origin) {
+    res.header("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+  }
+  res.sendStatus(200)
+});
+
+//* -----Todos los recursos que sean MOVIES se identifican con /movies-----
 app.get("/movies", (req, res) => {
+  const origin = req.header("origin");
+  if (ACCEPTED_ORIGINS.includes(origin) || !origin) {
+    res.header("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+  }
+
   const { genre } = req.query;
   if (genre) {
     const filteredMovies = movies.filter((movie) =>
@@ -19,6 +39,7 @@ app.get("/movies", (req, res) => {
   res.json(movies);
 });
 
+//* ----Guardar una movie-----
 app.post("/movies", (req, res) => {
   const result = validateMovie(req.body);
   if (result.error) {
@@ -32,7 +53,7 @@ app.post("/movies", (req, res) => {
   res.status(201).json(newMovie); //Actualizar la cache del cliente
 });
 
-//Obtener una pelicula por su ID
+//* -----Obtener una pelicula por su ID-----
 app.get("/movies/:id", (req, res) => {
   const { id } = req.params;
   const movie = movies.find((movie) => movie.id === id);
@@ -41,7 +62,49 @@ app.get("/movies/:id", (req, res) => {
     : res.status(404).json({ message: "Movie not found" });
 });
 
-const PORT = process.env.PORT ?? 3001;
+//* -----Eliminar una movie-----
+app.delete("/movies/:id", (req, res) => {
+  const origin = req.header("origin");
+  if (ACCEPTED_ORIGINS.includes(origin) || !origin) {
+    res.header("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+  }
+
+  const { id } = req.params;
+  const movieIndex = movies.findIndex((movie) => movie.id === id);
+
+  if (movieIndex === -1) {
+    return res.status(404).json({ message: "Movie not found" });
+  }
+  movies.splice(movieIndex, 1);
+  res.sendStatus(200)
+});
+
+//* Actualizar solo una pelicula
+app.patch("/movies/:id", (req, res) => {
+  const result = validatePartialMovie(req.body);
+  console.log(result);
+  if (!result.success) {
+    return res.status(400).json({ error: JSON.parse(result.error.message) });
+  }
+
+  const { id } = req.params;
+  const movieIndex = movies.findIndex((movie) => movie.id === id);
+
+  if (movieIndex === -1) {
+    return res.status(404).json({ message: "Movie not found" });
+  }
+
+  const updateMovie = {
+    ...movies[movieIndex],
+    ...result.data,
+  };
+  movies[movieIndex] = updateMovie;
+
+  return res.json(updateMovie);
+});
+
+const PORT = process.env.PORT ?? 3002;
 
 app.listen(PORT, () => {
   console.log(`server listening on port http://localhost:${PORT}`);
